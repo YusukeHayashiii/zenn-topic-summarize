@@ -34,3 +34,8 @@ class Config:
     # Output settings
     DEFAULT_OUTPUT_DIR = "./output"
     MARKDOWN_TEMPLATE = "default"
+    
+    # Crawler settings
+    CRAWLER_TIMEOUT = 10
+    CRAWLER_MAX_RETRY = 3
+    DEFAULT_PERIOD = "week"

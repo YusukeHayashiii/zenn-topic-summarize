@@ -98,20 +98,43 @@ Zennの特定トピックに関する記事を取得・要約し、Markdown形�
 ```
 zenn_mcp_server/
 ├── app/
+│   ├── __init__.py          # Pythonパッケージ初期化
 │   ├── main.py              # FastAPI + MCP エントリーポイント
-│   ├── crawler.py           # Zenn記事取得
-│   ├── summarizer.py        # LLM要約機能
-│   ├── renderer.py          # Markdown生成
-│   ├── config.py            # 設定管理
-│   └── utils.py             # 共通ユーティリティ
+│   ├── crawler.py           # Zenn記事取得 (実装済み)
+│   ├── summarizer.py        # LLM要約機能 (未実装)
+│   ├── renderer.py          # Markdown生成 (未実装)
+│   ├── config.py            # 設定管理 (実装済み)
+│   ├── logging_config.py    # ログ設定 (実装済み)
+│   ├── vertex_ai_client.py  # Vertex AI クライアント (実装済み)
+│   └── utils.py             # 共通ユーティリティ (未実装)
 ├── tests/                   # テストコード
+│   ├── __init__.py          # テストパッケージ初期化
+│   ├── test_config.py       # 設定テスト (実装済み)
+│   ├── test_crawler.py      # クローラーテスト (実装済み)
+│   ├── test_logging.py      # ログテスト (実装済み)
+│   ├── test_main.py         # メインテスト (実装済み)
+│   └── test_vertex_ai.py    # Vertex AIテスト (実装済み)
 ├── docs/                    # ドキュメント
-├── .gitignore               # Git除外設定
-├── pyproject.toml           # uv設定・依存関係
-├── uv.lock                  # 依存関係ロックファイル
-├── requirements.txt         # pip用依存関係（互換性用）
-├── CLAUDE.md               # プロジェクト説明(Claude Code用)
-└── README.md              # プロジェクト説明
+│   ├── requirements.md      # 要件定義書
+│   ├── tdd_rule.md         # TDD開発ルール
+│   ├── branch_rule.md      # ブランチ戦略
+│   ├── vertex-ai-setup.md  # Vertex AI設定手順
+│   ├── github-actions-setup.md # GitHub Actions設定
+│   ├── dev_log/            # 開発ログ
+│   │   ├── 01_project_foundation_completed.md
+│   │   └── 02_article_crawler_implementation.md
+│   ├── sow/                # 作業範囲定義書
+│   │   ├── 01_project_foundation.md
+│   │   └── 02_article_crawler.md
+│   └── planning/           # 計画書
+│       └── plan_o3.md
+├── logs/                   # ログファイル
+│   └── zenn_mcp/          # プロジェクト専用ログ
+├── pyproject.toml          # uv設定・依存関係
+├── uv.lock                 # 依存関係ロックファイル
+├── requirements.txt        # pip用依存関係（互換性用）
+├── CLAUDE.md              # Claude Code開発ルール
+└── README.md             # プロジェクト説明
 ```
 
 ※注意：.mcp.jsonはホームディレクトリ配下（@~/.claude/.mcp.json）に配置する
@@ -119,12 +142,12 @@ zenn_mcp_server/
 ### 4.2 使用技術・ライブラリ
 - **Webフレームワーク**: FastAPI
 - **HTTP通信**: requests
-- **HTMLパース**: BeautifulSoup4
+- **HTMLパース**: BeautifulSoup4 + lxml (XMLパーサー)
 - **日付処理**: python-dateutil
 - **データ検証**: Pydantic
 - **LLM統合**: google-cloud-aiplatform (Vertex AI)
 - **テスト**: pytest
-- **ロギング**: loguru
+- **ロギング**: loguru, vibelogger
 
 ### 4.3 外部API
 - **Zenn トピックフィード**: `https://zenn.dev/topics/[トピック名]/feed`
@@ -152,11 +175,16 @@ class Config:
     
     # 並列処理
     MAX_CONCURRENT_REQUESTS = 5
-    REQUEST_TIMEOUT = 10
+    REQUEST_TIMEOUT = 30
     
     # 出力設定
     DEFAULT_OUTPUT_DIR = "./output"
     MARKDOWN_TEMPLATE = "default"
+    
+    # クローラー設定
+    CRAWLER_TIMEOUT = 10
+    CRAWLER_MAX_RETRY = 3
+    DEFAULT_PERIOD = "week"
 ```
 
 ## 5. インターフェース仕様
@@ -312,23 +340,23 @@ React 18で導入されたConcurrent Features、Suspense、自動バッチング
 ## 11. 開発タスク分解
 
 ### 11.1 基盤設定タスク
-- [ ] プロジェクト初期設定（pyproject.toml、uv.lock作成）
-- [ ] 環境変数設定とconfig.py実装
-- [ ] vibeloggerによるロギング設定
-- [ ] 基本的なテスト環境構築
-- [ ] .gitignore設定
+- [x] プロジェクト初期設定（pyproject.toml、uv.lock作成）
+- [x] 環境変数設定とconfig.py実装
+- [x] vibeloggerによるロギング設定
+- [x] 基本的なテスト環境構築
+- [x] .gitignore設定
 
 ### 11.2 記事取得機能タスク
-- [ ] Zennトピックフィード取得機能実装
+- [x] Zennトピックフィード取得機能実装（基本構造）
 - [ ] Zenn非公開JSON API取得機能実装（フォールバック）
 - [ ] HTMLスクレイピング機能実装（最終フォールバック）
-- [ ] 期間フィルタ機能実装
-- [ ] いいね数ソート機能実装
-- [ ] 記事数制限機能実装
-- [ ] ネットワークエラー時の再試行機能実装
+- [x] 期間フィルタ機能実装
+- [x] いいね数ソート機能実装
+- [x] 記事数制限機能実装
+- [ ] ネットワークエラー時の再試行機能実装（部分実装）
 
 ### 11.3 記事要約機能タスク
-- [ ] Vertex AI (Gemini 2.5 Pro) クライアント実装
+- [x] Vertex AI (Gemini 2.5 Pro) クライアント実装（基盤）
 - [ ] 記事本文のHTML→テキスト変換機能実装
 - [ ] 複数記事の並列要約処理実装
 - [ ] 要約品質制御（200-300文字、技術ポイント重視）実装

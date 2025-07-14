@@ -94,6 +94,8 @@ iniconfig==2.1.0
     # via pytest
 loguru==0.7.3
     # via zenn-mcp-server (pyproject.toml)
+lxml==6.0.0
+    # via zenn-mcp-server (pyproject.toml)
 numpy==2.3.1
     # via shapely
 packaging==25.0
