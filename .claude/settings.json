@@ -84,6 +84,8 @@
         "Bash(git reset:*)",
         "Bash(git cherry-pick:*)",
         "Bash(git branch:*)",
+        "Bash(uv run:*)",
+        "Bash(uv:*)",
         "mcp__gemini-google-search__google_search"
       ],
       "deny": []

@@ -101,8 +101,8 @@ zenn_mcp_server/
 │   ├── __init__.py          # Pythonパッケージ初期化
 │   ├── main.py              # FastAPI + MCP エントリーポイント
 │   ├── crawler.py           # Zenn記事取得 (実装済み)
-│   ├── summarizer.py        # LLM要約機能 (未実装)
-│   ├── renderer.py          # Markdown生成 (未実装)
+│   ├── summarizer.py        # 統合要約機能 (実装済み)
+│   ├── renderer.py          # Markdown生成 (実装済み)
 │   ├── config.py            # 設定管理 (実装済み)
 │   ├── logging_config.py    # ログ設定 (実装済み)
 │   ├── vertex_ai_client.py  # Vertex AI クライアント (実装済み)
@@ -113,7 +113,10 @@ zenn_mcp_server/
 │   ├── test_crawler.py      # クローラーテスト (実装済み)
 │   ├── test_logging.py      # ログテスト (実装済み)
 │   ├── test_main.py         # メインテスト (実装済み)
-│   └── test_vertex_ai.py    # Vertex AIテスト (実装済み)
+│   ├── test_vertex_ai.py    # Vertex AIテスト (実装済み)
+│   ├── test_summarizer.py   # 統合要約テスト (実装済み)
+│   ├── test_renderer.py     # レポート生成テスト (実装済み)
+│   └── test_integration.py  # 統合テスト (実装済み)
 ├── docs/                    # ドキュメント
 │   ├── requirements.md      # 要件定義書
 │   ├── tdd_rule.md         # TDD開発ルール
@@ -122,10 +125,13 @@ zenn_mcp_server/
 │   ├── github-actions-setup.md # GitHub Actions設定
 │   ├── dev_log/            # 開発ログ
 │   │   ├── 01_project_foundation_completed.md
-│   │   └── 02_article_crawler_implementation.md
+│   │   ├── 02_article_crawler_implementation.md
+│   │   ├── 02_vibelogger_integration_completed.md
+│   │   └── 03_integrated_summarization_system_completed.md
 │   ├── sow/                # 作業範囲定義書
 │   │   ├── 01_project_foundation.md
-│   │   └── 02_article_crawler.md
+│   │   ├── 02_article_crawler.md
+│   │   └── 03_integrated_summarization_system.md
 │   └── planning/           # 計画書
 │       └── plan_o3.md
 ├── logs/                   # ログファイル
@@ -357,19 +363,19 @@ React 18で導入されたConcurrent Features、Suspense、自動バッチング
 
 ### 11.3 記事要約機能タスク
 - [x] Vertex AI (Gemini 2.5 Pro) クライアント実装（基盤）
-- [ ] 記事本文のHTML→テキスト変換機能実装
-- [ ] 複数記事の並列要約処理実装
-- [ ] 要約品質制御（200-300文字、技術ポイント重視）実装
-- [ ] LLM API障害時のエラーハンドリング実装
+- [x] 記事本文のHTML→テキスト変換機能実装
+- [x] 複数記事の並列要約処理実装
+- [x] 要約品質制御（200-300文字、技術ポイント重視）実装
+- [x] LLM API障害時のエラーハンドリング実装
 
 ### 11.4 レポート生成機能タスク
-- [ ] Markdownテンプレート作成
-- [ ] レポートヘッダー生成機能実装
-- [ ] 記事一覧フォーマット機能実装
-- [ ] フッター生成機能実装
-- [ ] ファイル保存機能実装
-- [ ] ファイル名自動生成機能実装
-- [ ] 上書き確認機能実装
+- [x] Markdownテンプレート作成
+- [x] レポートヘッダー生成機能実装
+- [x] 記事一覧フォーマット機能実装
+- [x] フッター生成機能実装
+- [x] ファイル保存機能実装
+- [x] ファイル名自動生成機能実装
+- [x] 上書き確認機能実装
 
 ### 11.5 MCP統合機能タスク
 - [ ] FastAPI基盤実装
@@ -381,9 +387,9 @@ React 18で導入されたConcurrent Features、Suspense、自動バッチング
 - [ ] MCP通信テスト実装
 
 ### 11.6 統合・品質保証タスク
-- [ ] 単体テスト実装（90%カバレッジ目標）
-- [ ] 統合テスト実装
+- [x] 単体テスト実装（90%カバレッジ目標）
+- [x] 統合テスト実装
 - [ ] E2Eテスト実装（Claude Code連携）
-- [ ] 性能テスト実装（60秒以内制約）
-- [ ] エラーケーステスト実装
-- [ ] ドキュメント最終整備
+- [x] 性能テスト実装（60秒以内制約）
+- [x] エラーケーステスト実装
+- [x] ドキュメント最終整備

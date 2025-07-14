@@ -2,7 +2,7 @@
 
 ## 実装概要
 
-**実装日**: 2025年1月14日  
+**実装日**: 2025年7月14日  
 **ブランチ**: feature/zenn_mcp_02  
 **対応SOW**: docs/sow/02_article_crawler.md
 
