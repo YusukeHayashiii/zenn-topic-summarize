@@ -1,28 +1,81 @@
 """
-Main FastAPI application for Zenn MCP Server.
+Zenn MCP Server using FastMCP for simplified implementation.
 """
 
-from fastapi import FastAPI
-from app.logging_config import setup_logging
+from typing import Annotated
+
+from mcp.server.fastmcp import FastMCP
+
+from app.crawler import ZennCrawler
+from app.logging_config import get_logger, setup_logging
 
 # Initialize logging
 setup_logging()
+logger = get_logger(__name__)
 
-# Create FastAPI app instance
-app = FastAPI(
-    title="Zenn MCP Server",
-    description="MCP Server for Zenn article search, summarization and report generation",
-    version="0.1.0",
-)
+# Create FastMCP server
+mcp = FastMCP("zenn-mcp")
 
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+@mcp.tool()
+def search_zenn_articles(
+    topic: Annotated[str, "検索トピック"], 
+    max_articles: Annotated[int, "最大取得記事数 (1-10)"] = 10
+) -> str:
+    """Zennから指定トピックの記事フィードを取得"""
+    
+    logger.info(
+        operation="search_zenn_articles",
+        message=f"Searching articles for topic: {topic}",
+        context={"topic": topic, "max_articles": max_articles}
+    )
+    
+    try:
+        # Validate max_articles
+        if max_articles < 1 or max_articles > 10:
+            max_articles = 10
+        
+        # Initialize crawler
+        crawler = ZennCrawler()
+        
+        # Fetch articles from feed
+        articles = crawler.fetch_articles_from_feed(
+            topic=topic,
+            max_articles=max_articles
+        )
+        
+        if not articles:
+            return f"トピック '{topic}' の記事が見つかりませんでした。"
+        
+        # Format response with basic article information
+        response_parts = [
+            f"# トピック: {topic}",
+            f"取得記事数: {len(articles)}件\n"
+        ]
+        
+        for i, article in enumerate(articles, 1):
+            response_parts.append(
+                f"## {i}. {article.get('title', 'タイトルなし')}\n"
+                f"- **作成者**: {article.get('creator', '不明')}\n"
+                f"- **作成日**: {article.get('published_at', '不明')}\n"
+                f"- **概要**: {article.get('description', '概要なし')}\n"
+                f"- **URL**: {article.get('url', 'URLなし')}\n"
+            )
+        
+        return "\n".join(response_parts)
+            
+    except Exception as e:
+        logger.error(
+            operation="search_zenn_articles",
+            message="Tool execution failed",
+            context={"error": str(e)}
+        )
+        return f"エラーが発生しました: {str(e)}"
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    logger.info(
+        operation="mcp_server_start",
+        message="Starting Zenn MCP Server with FastMCP"
+    )
+    mcp.run()
