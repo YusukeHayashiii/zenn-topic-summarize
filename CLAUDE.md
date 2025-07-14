@@ -15,6 +15,27 @@ Zennの記事を検索・要約してMarkdownレポートを生成するMCPサ�
 - 作業の中でブラウザ検索をする必要が出た場合は、必ず `gemini-google-search` を用いる
   - 一度でうまく接続できない時があるので、何度か試すこと
 
+#### 補足：`gemini-google-search` について
+
+この開発環境で使用しているmcpサーバーであり、`@~/.claude/.mcp.json` に追加して使用している。
+
+```json
+{
+  "mcpServers": {
+    "gemini-google-search": {
+        "command": "npx",
+        "args": ["mcp-gemini-google-search"],
+        "env": {
+          "GEMINI_PROVIDER": "vertex",
+          "VERTEX_PROJECT_ID": "your-gcp-project-id",
+          "VERTEX_LOCATION": "us-central1",
+          "GEMINI_MODEL": "gemini-2.5-flash"
+        }
+      }
+  }
+}
+```
+
 ### テスト駆動開発
 
 - 開発はテスト駆動で行う。`@docs/tdd_rule.md` に従って開発を行う
@@ -65,7 +86,8 @@ Zennの記事を検索・要約してMarkdownレポートを生成するMCPサ�
 
 ## MCP設定
 
-`@~/.claude/.mcp.json` に追加：
+以下の設定を`.mcp.json`に追加する。
+詳細は[公式ページ](https://docs.anthropic.com/ja/docs/claude-code/settings#%E8%A8%AD%E5%AE%9A%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB)を参照
 
 ```json
 {
