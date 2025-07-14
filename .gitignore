@@ -74,5 +74,5 @@ reports/
 *.temp
 .tmp/
 
-# UV
-uv.lock
+# UV - Keep uv.lock for dependency management
+# uv.lock
