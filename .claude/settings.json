@@ -2,7 +2,7 @@
     "permissions": {
       "allow": [
         "List(*)",
-        "Fetch(https://*)",
+        "Fetch(https:*)",
         "Bash(ls:*)",
         "Bash(rg:*)",
         "Bash(mv:*)",
@@ -80,6 +80,7 @@
         "Bash(git commit:*)",
         "Bash(git checkout:*)",
         "Bash(git remote set-url:*)",
+        "Bash(git push:*)",
         "Bash(git pull:*)",
         "Bash(git reset:*)",
         "Bash(git cherry-pick:*)",
