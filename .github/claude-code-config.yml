@@ -1,0 +1,105 @@
+# Claude Code Review Configuration
+# This file customizes the behavior of Claude Code Review Action
+
+# Review settings
+review:
+  # AI model to use for code review
+  model: "claude-3-5-sonnet-20241022"
+  
+  # Maximum tokens for the review response
+  max_tokens: 4000
+  
+  # Temperature for AI responses (0.0 = deterministic, 1.0 = creative)
+  temperature: 0.1
+  
+  # Whether to review only changed files or entire PR
+  review_mode: "changed_files_only"
+
+# File patterns
+patterns:
+  # Files to include in review
+  include:
+    - "**/*.py"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.jsx"
+    - "**/*.tsx"
+    - "**/*.md"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.json"
+    - "**/*.toml"
+  
+  # Files to exclude from review
+  exclude:
+    - "node_modules/**"
+    - ".venv/**"
+    - "__pycache__/**"
+    - "*.pyc"
+    - "dist/**"
+    - "build/**"
+    - ".git/**"
+    - "logs/**"
+    - "*.log"
+    - ".pytest_cache/**"
+    - "htmlcov/**"
+    - "*.egg-info/**"
+
+# Review focus areas
+focus_areas:
+  - "Code quality and best practices"
+  - "Test coverage and correctness"
+  - "Security vulnerabilities and best practices"
+  - "Performance optimizations"
+  - "Documentation completeness and clarity"
+  - "TDD compliance and test structure"
+  - "Error handling and edge cases"
+  - "API design and RESTful principles"
+  - "Python PEP 8 compliance"
+  - "Dependency management and security"
+
+# Project-specific instructions
+project_context: |
+  This is a Python MCP (Model Context Protocol) server project for Zenn article summarization.
+  
+  Key technologies and frameworks:
+  - FastAPI for web framework
+  - pytest for testing with TDD approach
+  - uv for dependency management
+  - pydantic for data validation
+  - MCP protocol for Claude integration
+  
+  Please pay special attention to:
+  - Adherence to Test-Driven Development (TDD) practices
+  - Proper error handling and comprehensive logging
+  - MCP protocol compliance and integration
+  - RESTful API design principles
+  - Python coding standards (PEP 8)
+  - Security best practices for web APIs
+  - Performance considerations for LLM integrations
+  - Comprehensive test coverage (target: 90%+)
+
+# Comment settings
+comments:
+  # Whether to post summary comments
+  post_summary: true
+  
+  # Whether to post line-level comments
+  post_line_comments: true
+  
+  # Minimum severity level for comments (info, warning, error)
+  min_severity: "info"
+  
+  # Maximum number of comments per PR
+  max_comments: 50
+
+# Integration settings
+integrations:
+  # Whether to update PR status checks
+  update_status_checks: true
+  
+  # Whether to request changes for critical issues
+  request_changes_on_critical: true
+  
+  # Whether to auto-approve PRs with no issues
+  auto_approve_clean_prs: false
