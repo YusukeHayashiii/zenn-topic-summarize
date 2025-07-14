@@ -4,7 +4,6 @@ TDD原則に従って実装
 """
 
 import requests
-from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
 from app.logging_config import get_logger
@@ -21,76 +20,26 @@ class ZennCrawler:
         self.api_base_url = Config.ZENN_API_BASE_URL
         self.timeout = Config.CRAWLER_TIMEOUT
 
-    def fetch_articles(self, topic: str, max_articles: int = 10) -> List[Dict]:
-        """
-        指定トピックの記事を取得する（メインメソッド）
-
-        Args:
-            topic: 検索対象のトピック名
-            max_articles: 最大取得記事数
-
-        Returns:
-            記事リスト
-        """
-        self.logger.info(
-            operation="fetch_articles",
-            message="Fetching articles for topic",
-            context={"topic": topic, "max_articles": max_articles},
-        )
-
-        # フィードから取得を試行
-        try:
-            articles = self.fetch_articles_from_feed(topic, max_articles=max_articles)
-            if articles:
-                return self._sort_by_liked_count(articles)[:max_articles]
-        except Exception as e:
-            self.logger.warning(
-                operation="fetch_articles",
-                message="Feed fetch failed",
-                context={"error": str(e)},
-            )
-
-        # テストを通すための基本実装
-        sample_articles = [
-            {
-                "title": "Sample React Article 1",
-                "url": "https://zenn.dev/sample/articles/react-sample-1",
-                "author": "sample_user1",
-                "published_at": "2024-01-15",
-                "liked_count": 42,
-            },
-            {
-                "title": "Sample React Article 2",
-                "url": "https://zenn.dev/sample/articles/react-sample-2",
-                "author": "sample_user2",
-                "published_at": "2024-01-14",
-                "liked_count": 30,
-            },
-        ]
-
-        return sample_articles[:max_articles]
 
     def fetch_articles_from_feed(
-        self, topic: str, period: str = None, max_articles: int = None
+        self, topic: str, max_articles: int = None
     ) -> List[Dict]:
         """
         Zennトピックフィードから記事を取得する
 
         Args:
             topic: 検索対象のトピック名
-            period: 取得期間 (today, week, month)
             max_articles: 最大取得記事数
 
         Returns:
             記事リスト
         """
-        period = period or Config.DEFAULT_PERIOD
-        max_articles = max_articles or Config.DEFAULT_ARTICLES
+        max_articles = max_articles or 10
 
         self.logger.info(
             operation="fetch_from_feed",
             message="Fetching from feed",
-            context={"topic": topic, "period": period, "max_articles": max_articles},
+            context={"topic": topic, "max_articles": max_articles},
         )
 
         feed_url = f"{self.base_feed_url}/{topic}/feed"
@@ -103,17 +52,12 @@ class ZennCrawler:
             items = soup.find_all("item")
 
             articles = []
-            cutoff_date = self._get_cutoff_date(period)
 
-            for item in items[: max_articles * 2]:  # 余裕を持って取得
+            for item in items[:max_articles]:  # 指定数だけ取得
                 try:
                     article = self._parse_feed_item(item)
-                    if article and self._is_within_period(
-                        article["published_at"], cutoff_date
-                    ):
+                    if article:
                         articles.append(article)
-                        if len(articles) >= max_articles:
-                            break
                 except Exception as e:
                     self.logger.warning(
                         operation="parse_feed_item",
@@ -143,21 +87,26 @@ class ZennCrawler:
             title = item.find("title").text if item.find("title") else ""
             link = item.find("link").text if item.find("link") else ""
             pub_date = item.find("pubDate").text if item.find("pubDate") else ""
-
-            # 簡単な作者名抽出（実際のフィード構造に依存）
-            author = "unknown"
-            description = item.find("description")
-            if description:
-                desc_text = description.text
-                # 簡単な作者名抽出ロジック（実際のフィード構造を調査後に改善）
-                author = "zenn_user"
+            
+            # description要素からdescriptionテキストを取得
+            description = ""
+            desc_element = item.find("description")
+            if desc_element:
+                description = desc_element.text or ""
+                # HTMLタグが含まれている場合は除去
+                if "<" in description:
+                    try:
+                        from bs4 import BeautifulSoup
+                        soup = BeautifulSoup(description, "html.parser")
+                        description = soup.get_text().strip()
+                    except:
+                        description = description.replace("<", "").replace(">", "")
 
             return {
                 "title": title,
                 "url": link,
-                "author": author,
                 "published_at": pub_date,
-                "liked_count": 0,  # フィードからは取得困難、後でAPI連携で取得
+                "description": description,
             }
         except Exception as e:
             self.logger.warning(
@@ -167,32 +116,4 @@ class ZennCrawler:
             )
             return None
 
-    def _get_cutoff_date(self, period: str) -> datetime:
-        """期間フィルタの基準日を取得"""
-        now = datetime.now()
-        if period == "today":
-            return now - timedelta(days=1)
-        elif period == "week":
-            return now - timedelta(weeks=1)
-        elif period == "month":
-            return now - timedelta(days=30)
-        else:
-            return now - timedelta(weeks=1)  # デフォルトは1週間
 
-    def _is_within_period(self, pub_date_str: str, cutoff_date: datetime) -> bool:
-        """記事が指定期間内かチェック"""
-        try:
-            # 簡単な日付パース（実際のフォーマットに合わせて調整）
-            pub_date = datetime.strptime(pub_date_str[:10], "%Y-%m-%d")
-            return pub_date >= cutoff_date
-        except (ValueError, TypeError, IndexError) as e:
-            self.logger.warning(
-                operation="date_parsing",
-                message="Date parsing failed",
-                context={"pub_date_str": pub_date_str, "error": str(e)}
-            )
-            return False  # より保守的な処理
-
-    def _sort_by_liked_count(self, articles: List[Dict]) -> List[Dict]:
-        """記事をいいね数順でソート"""
-        return sorted(articles, key=lambda x: x.get("liked_count", 0), reverse=True)

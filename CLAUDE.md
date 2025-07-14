@@ -1,6 +1,6 @@
 # Zenn MCP サーバー
 
-Zennの記事を検索・要約してMarkdownレポートを生成するMCPサーバーです。
+Zennの記事フィードを取得するシンプルなMCPサーバーです。
 
 ## Claude Code開発ルール
 
