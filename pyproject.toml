@@ -1,7 +1,7 @@
 [project]
 name = "zenn-mcp-server"
 version = "0.1.0"
-description = "Zenn MCP Server for article search, summarization and report generation"
+description = "Zenn MCP Server for article feed retrieval"
 authors = [
     {name = "YusukeHayashiii", email = "your-email@example.com"}
 ]
@@ -12,7 +12,6 @@ dependencies = [
     "lxml>=4.9.0",
     "python-dateutil>=2.8.0",
     "pydantic>=2.5.0",
-    "google-cloud-aiplatform>=1.38.0",
     "pytest>=7.4.0",
     "loguru>=0.7.0",
     "uvicorn>=0.24.0",
