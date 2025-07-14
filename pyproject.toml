@@ -16,11 +16,12 @@ dependencies = [
     "pytest>=7.4.0",
     "loguru>=0.7.0",
     "uvicorn>=0.24.0",
-    "vibelogger>=0.1.0"
+    "vibelogger>=0.1.0",
+    "mcp[cli]>=1.11.0",
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.8.1"
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 dev = [
@@ -48,14 +49,19 @@ addopts = "-v"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py310']
 
 [tool.isort]
 profile = "black"
 line_length = 88
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.0.0",
+]
