@@ -121,7 +121,7 @@ zenn_mcp_server/
 │   ├── requirements.md      # 要件定義書
 │   ├── tdd_rule.md         # TDD開発ルール
 │   ├── branch_rule.md      # ブランチ戦略
-│   ├── vertex-ai-setup.md  # Vertex AI設定手順
+│   ├── vertex-ai-setup.md  # Vertex AI設定手順（簡略化版）
 │   ├── github-actions-setup.md # GitHub Actions設定
 │   ├── dev_log/            # 開発ログ
 │   │   ├── 01_project_foundation_completed.md
