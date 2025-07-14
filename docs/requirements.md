@@ -378,13 +378,13 @@ React 18で導入されたConcurrent Features、Suspense、自動バッチング
 - [x] 上書き確認機能実装
 
 ### 11.5 MCP統合機能タスク
-- [ ] FastAPI基盤実装
-- [ ] `search_zenn_articles` MCPツール実装
-- [ ] `get_article_summary` MCPツール実装
-- [ ] `save_report` MCPツール実装
-- [ ] パラメータ検証機能実装
-- [ ] エラーレスポンス機能実装
-- [ ] MCP通信テスト実装
+- [x] FastAPI基盤実装
+- [x] `search_zenn_articles` MCPツール実装
+- [x] `get_article_summary` MCPツール実装
+- [x] `save_report` MCPツール実装
+- [x] パラメータ検証機能実装
+- [x] エラーレスポンス機能実装
+- [x] MCP通信テスト実装
 
 ### 11.6 統合・品質保証タスク
 - [x] 単体テスト実装（90%カバレッジ目標）
