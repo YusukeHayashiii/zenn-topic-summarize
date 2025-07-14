@@ -1,29 +1,22 @@
 """
-Logging configuration for Zenn MCP Server.
-Temporarily using standard logging until vibelogger API is confirmed.
+Logging configuration for Zenn MCP Server using vibelogger.
 """
-import logging
-import os
-from pathlib import Path
+from vibelogger import create_file_logger
+
+# Global logger instance
+_logger = None
 
 
 def setup_logging():
-    """Setup logging configuration."""
-    # Create logs directory if it doesn't exist
-    log_dir = Path("logs/zenn_mcp")
-    log_dir.mkdir(parents=True, exist_ok=True)
+    """Setup vibelogger configuration."""
+    global _logger
     
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_dir / "zenn_mcp.log"),
-            logging.StreamHandler()
-        ]
-    )
+    # Create vibelogger instance - it automatically creates ./logs/zenn_mcp/ directory
+    _logger = create_file_logger("zenn_mcp")
 
 
-def get_logger(name: str):
-    """Get a logger instance with the given name."""
-    return logging.getLogger(name)
+def get_logger(name: str = "zenn_mcp"):
+    """Get the vibelogger instance."""
+    if _logger is None:
+        setup_logging()
+    return _logger

@@ -2,7 +2,6 @@
 Vertex AI client for text summarization using Gemini models.
 """
 import json
-import logging
 from typing import Optional, List, Dict, Any
 from google.cloud import aiplatform
 from google.cloud.aiplatform import gapic
@@ -10,7 +9,7 @@ from google.protobuf import struct_pb2
 from app.config import Config
 from app.logging_config import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class VertexAIClient:
@@ -33,7 +32,15 @@ class VertexAIClient:
             client_options={"api_endpoint": f"{self.location}-aiplatform.googleapis.com"}
         )
         
-        logger.info(f"Initialized Vertex AI client for project: {self.project_id}")
+        logger.info(
+            operation="vertex_ai_init",
+            message="Vertex AI client initialized",
+            context={
+                "project_id": self.project_id,
+                "location": self.location,
+                "model": self.model
+            }
+        )
     
     def summarize_text(self, text: str, max_length: int = 300) -> str:
         """
@@ -91,11 +98,27 @@ class VertexAIClient:
                     if candidates and len(candidates) > 0:
                         return candidates[0].content.parts[0].text
                 
-            logger.warning("No valid prediction found in response")
+            logger.warning(
+                operation="text_summarization",
+                message="No valid prediction found in response",
+                context={
+                    "response_type": type(response).__name__,
+                    "predictions_count": len(predictions) if predictions else 0
+                }
+            )
             return "要約の生成に失敗しました。"
             
         except Exception as e:
-            logger.error(f"Error during text summarization: {str(e)}")
+            logger.error(
+                operation="text_summarization",
+                message="Text summarization failed",
+                context={
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "text_length": len(text) if text else 0
+                },
+                human_note="AI-TODO: テキスト要約エラーの詳細な調査が必要です"
+            )
             return f"要約エラー: {str(e)}"
     
     def _create_summary_prompt(self, text: str, max_length: int) -> str:
@@ -130,7 +153,15 @@ class VertexAIClient:
         summaries = []
         
         for i, text in enumerate(texts):
-            logger.info(f"Summarizing text {i+1}/{len(texts)}")
+            logger.info(
+                operation="batch_summarization",
+                message="Processing text batch",
+                context={
+                    "current_index": i+1,
+                    "total_count": len(texts),
+                    "text_length": len(text)
+                }
+            )
             summary = self.summarize_text(text, max_length)
             summaries.append(summary)
         
@@ -148,5 +179,15 @@ class VertexAIClient:
             test_result = self.summarize_text("これはテストです。", max_length=50)
             return "テスト" in test_result or "エラー" not in test_result
         except Exception as e:
-            logger.error(f"Connection test failed: {str(e)}")
+            logger.error(
+                operation="connection_test",
+                message="Vertex AI connection test failed",
+                context={
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "project_id": self.project_id,
+                    "location": self.location
+                },
+                human_note="AI-TODO: Vertex AI接続設定の確認が必要です"
+            )
             return False
