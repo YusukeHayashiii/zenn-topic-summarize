@@ -10,6 +10,8 @@
   - バグごとにブランチを切る
 - release/zenn_mcp_[n]: リリース用ブランチ。[n]は連番。
 - hotfix/zenn_mcp_[n]: 緊急バグ修正用ブランチ。[n]は連番。
+- Claude codeが複数のブランチで並列作業を行う場合は、git worktreeを利用する
+  - 参考： https://git-scm.com/docs/git-worktree
 
 ## プルリクエストの基本ルール
 
