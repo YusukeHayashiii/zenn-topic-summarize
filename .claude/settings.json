@@ -9,6 +9,7 @@
       "Bash(git checkout*)",
       "Bash(git status*)",
       "Bash(git pull*)",
+      "Bash(git pull origin*)",
       "Bash(git remote*)",
       "Bash(git config*)",
       "Bash(git diff*)",
