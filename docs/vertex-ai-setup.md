@@ -24,33 +24,7 @@ gcloud services enable compute.googleapis.com
 
 ### 2. 認証設定
 
-#### サービスアカウントの作成
-1. Google Cloud Console で「IAM & Admin」→「Service Accounts」に移動
-2. 「CREATE SERVICE ACCOUNT」をクリック
-3. サービスアカウント情報を入力：
-   - **Name**: `zenn-mcp-vertex-ai`
-   - **Description**: `Zenn MCP Server Vertex AI access`
-4. 必要な権限を付与：
-   - `Vertex AI User`
-   - `AI Platform Developer` (optional, for additional features)
-5. JSON キーファイルをダウンロード
-
-#### 認証方法
-
-**方法1: サービスアカウントキー（推奨）**
-```bash
-# キーファイルのパスを環境変数に設定
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-```
-
-**方法2: gcloud CLI認証**
-```bash
-# Google Cloud CLIでログイン
-gcloud auth login
-gcloud config set project your-project-id
-gcloud auth application-default login
-```
+<!-- サービスアカウントを作成し、権限借用する形にしたいので、その内容を後ほど追記する -->
 
 ## 🛠️ アプリケーション設定
 
@@ -65,7 +39,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 
 # オプション設定（デフォルト値あり）
 export VERTEX_AI_LOCATION="us-central1"  # デフォルト: us-central1
-export VERTEX_AI_MODEL="gemini-1.5-pro"  # デフォルト: gemini-1.5-pro
+export VERTEX_AI_MODEL="gemini-2.5-pro"  # デフォルト: gemini-2.5-pro
 ```
 
 ### 2. .env ファイル作成
@@ -77,7 +51,7 @@ export VERTEX_AI_MODEL="gemini-1.5-pro"  # デフォルト: gemini-1.5-pro
 GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 VERTEX_AI_LOCATION=us-central1
-VERTEX_AI_MODEL=gemini-1.5-pro
+VERTEX_AI_MODEL=gemini-2.5-pro
 ```
 
 **注意**: `.env` ファイルは `.gitignore` に含まれているため、リポジトリにコミットされません。
@@ -88,9 +62,8 @@ Vertex AI で利用可能な Gemini モデル：
 
 | モデル名 | 説明 | 推奨用途 |
 |---------|------|---------|
-| `gemini-1.5-pro` | 高性能な汎用モデル | 複雑な要約・分析 |
-| `gemini-1.5-flash` | 高速レスポンス | 簡単な要約 |
-| `gemini-1.0-pro` | 安定版 | 一般的な用途 |
+| `gemini-2.5-pro` | 高性能な汎用モデル | 複雑な要約・分析 |
+| `gemini-2.5-flash` | コストが安い | 簡単な要約 |
 
 ## 🚀 使用方法
 
@@ -251,6 +224,163 @@ GOOGLE_APPLICATION_CREDENTIALS_JSON: <サービスアカウントキーのJSON�
     export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json
     export GOOGLE_CLOUD_PROJECT=${{ secrets.GOOGLE_CLOUD_PROJECT }}
 ```
+
+## 🤖 Claude Code Action セットアップ
+
+### Claude Code Action とは
+
+Claude Code Action は GitHub Actions 上で Anthropic の Claude モデルを活用し、プルリクエストレビュー、コード分析、コミット支援などを自動化する機能です。Vertex AI バックエンドを使用することで、Google Cloud Platform 上で Claude モデルを利用できます。
+
+### 前提条件
+
+Claude Code Action を使用するには以下が必要です：
+- Google Cloud Platform プロジェクト
+- Vertex AI での Claude モデルへのアクセス権
+- GitHub リポジトリとGitHub Actions の使用権限
+
+### 1. Vertex AI での Claude モデルアクセス設定
+
+#### モデルアクセス権限の取得
+1. [Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden) にアクセス
+2. "Claude" で検索し、利用したいモデルを選択
+   - Claude 3.5 Sonnet
+   - Claude 3.5 Haiku
+   - Claude 3 Opus
+3. 「REQUEST ACCESS」をクリック
+4. 利用目的を入力し申請（承認に時間がかかる場合があります）
+
+#### 必要な権限の確認
+サービスアカウントに以下の権限が必要です：
+- `roles/aiplatform.user` - Vertex AI User
+- `roles/aiplatform.admin` - AI Platform Administrator（管理者権限が必要な場合）
+- `roles/ml.admin` - ML Engine Admin（レガシー権限）
+
+### 2. Workload Identity Federation の設定
+
+#### Workload Identity Pool の作成
+```bash
+# Workload Identity Pool を作成
+gcloud iam workload-identity-pools create "claude-github-pool" \
+    --project="${GOOGLE_CLOUD_PROJECT}" \
+    --location="global" \
+    --display-name="Claude GitHub Actions Pool"
+
+# GitHub 用のプロバイダーを作成
+gcloud iam workload-identity-pools providers create-oidc "claude-github-provider" \
+    --project="${GOOGLE_CLOUD_PROJECT}" \
+    --location="global" \
+    --workload-identity-pool="claude-github-pool" \
+    --display-name="Claude GitHub Provider" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+    --issuer-uri="https://token.actions.githubusercontent.com"
+```
+
+#### サービスアカウントとの関連付け
+```bash
+# サービスアカウントに Workload Identity User 権限を付与
+gcloud iam service-accounts add-iam-policy-binding "zenn-mcp-vertex-ai@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
+    --project="${GOOGLE_CLOUD_PROJECT}" \
+    --role="roles/iam.workloadIdentityUser" \
+    --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/claude-github-pool/attribute.repository/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME"
+```
+
+### 3. GitHub Secrets の設定
+
+GitHub リポジトリの Settings > Secrets and variables > Actions で以下のシークレットを設定：
+
+| シークレット名 | 説明 | 例 |
+|---------------|------|-----|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Workload Identity Provider のリソース名 | `projects/123456789/locations/global/workloadIdentityPools/claude-github-pool/providers/claude-github-provider` |
+| `GCP_SERVICE_ACCOUNT` | サービスアカウントのメールアドレス | `zenn-mcp-vertex-ai@your-project.iam.gserviceaccount.com` |
+| `GOOGLE_CLOUD_PROJECT` | Google Cloud プロジェクト ID | `your-gcp-project-id` |
+
+### 4. GitHub Actions ワークフロー設定
+
+`.github/workflows/claude-code.yml` を作成：
+
+```yaml
+name: Claude Code Action
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+
+jobs:
+  claude-pr:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: anthropics/claude-code-action@beta
+        with:
+          model: "claude-3-5-sonnet@20241022"
+          use_vertex: "true"
+          github_token: ${{ steps.app-token.outputs.token }}
+          trigger_phrase: "@claude"
+          timeout_minutes: "60"
+        env:
+          ANTHROPIC_VERTEX_PROJECT_ID: ${{ steps.auth.outputs.project_id }}
+          CLOUD_ML_REGION: us-east5
+          BASE_BRANCH: develop
+```
+
+### 5. トリガー設定
+
+Claude Code Action は以下の条件で動作します：
+
+#### プルリクエストでの自動実行
+- プルリクエストが作成・更新されたとき
+- `@claude` でメンションされたとき
+
+#### コメントでの手動実行
+```markdown
+@claude このプルリクエストをレビューしてください
+
+@claude コードの品質を改善する提案をお願いします
+
+@claude セキュリティ上の問題をチェックしてください
+```
+
+### 6. 設定の検証
+
+#### ワークフロー実行の確認
+1. テストプルリクエストを作成
+2. GitHub Actions タブで実行状況を確認
+3. 認証エラーがないか確認
+
+#### ログでの確認事項
+- Google Cloud 認証の成功
+- Vertex AI API へのアクセス成功
+- Claude モデルからのレスポンス受信
 
 ---
 
