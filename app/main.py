@@ -6,9 +6,8 @@ from typing import Annotated
 
 from mcp.server.fastmcp import FastMCP
 
-from app.config import Config
 from app.crawler import ZennCrawler
-from app.logging_config import setup_logging, get_logger
+from app.logging_config import get_logger, setup_logging
 
 # Initialize logging
 setup_logging()
@@ -57,6 +56,7 @@ def search_zenn_articles(
         for i, article in enumerate(articles, 1):
             response_parts.append(
                 f"## {i}. {article.get('title', 'タイトルなし')}\n"
+                f"- **作成者**: {article.get('creator', '不明')}\n"
                 f"- **作成日**: {article.get('published_at', '不明')}\n"
                 f"- **概要**: {article.get('description', '概要なし')}\n"
                 f"- **URL**: {article.get('url', 'URLなし')}\n"
