@@ -148,7 +148,7 @@ class ZennSummarizer:
             抽出されたテキスト
         """
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=Config.CRAWLER_TIMEOUT)
             response.raise_for_status()
 
             return self._html_to_text(response.content.decode("utf-8"))
@@ -185,6 +185,10 @@ class ZennSummarizer:
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text = " ".join(chunk for chunk in chunks if chunk)
+
+            # BeautifulSoupオブジェクトを明示的に削除してメモリ効率を改善
+            soup.decompose()
+            del soup
 
             return text
 

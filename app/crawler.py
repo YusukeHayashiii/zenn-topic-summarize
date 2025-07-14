@@ -185,8 +185,13 @@ class ZennCrawler:
             # 簡単な日付パース（実際のフォーマットに合わせて調整）
             pub_date = datetime.strptime(pub_date_str[:10], "%Y-%m-%d")
             return pub_date >= cutoff_date
-        except:
-            return True  # パースに失敗した場合は含める
+        except (ValueError, TypeError, IndexError) as e:
+            self.logger.warning(
+                operation="date_parsing",
+                message="Date parsing failed",
+                context={"pub_date_str": pub_date_str, "error": str(e)}
+            )
+            return False  # より保守的な処理
 
     def _sort_by_liked_count(self, articles: List[Dict]) -> List[Dict]:
         """記事をいいね数順でソート"""

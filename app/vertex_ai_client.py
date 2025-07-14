@@ -99,7 +99,7 @@ class VertexAIClient:
                 message="No valid prediction found in response",
                 context={
                     "response_type": type(response).__name__,
-                    "predictions_count": len(predictions) if predictions else 0,
+                    "predictions_count": len(response.predictions) if response.predictions else 0,
                 },
             )
             return "要約の生成に失敗しました。"
