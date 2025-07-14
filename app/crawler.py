@@ -88,6 +88,12 @@ class ZennCrawler:
             link = item.find("link").text if item.find("link") else ""
             pub_date = item.find("pubDate").text if item.find("pubDate") else ""
             
+            # dc:creator要素から作成者情報を取得
+            creator = ""
+            creator_element = item.find("dc:creator")
+            if creator_element:
+                creator = creator_element.text or ""
+            
             # description要素からdescriptionテキストを取得
             description = ""
             desc_element = item.find("description")
@@ -106,6 +112,7 @@ class ZennCrawler:
                 "title": title,
                 "url": link,
                 "published_at": pub_date,
+                "creator": creator,
                 "description": description,
             }
         except Exception as e:

@@ -21,12 +21,13 @@ class TestZennCrawler:
             mock_response = MagicMock()
             mock_response.content = """
             <?xml version="1.0" encoding="UTF-8"?>
-            <rss version="2.0">
+            <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
                 <channel>
                     <item>
                         <title>Test Article</title>
                         <link>https://zenn.dev/test</link>
                         <pubDate>Mon, 14 Jul 2025 08:34:28 GMT</pubDate>
+                        <dc:creator>hoge</dc:creator>
                         <description>Test description</description>
                     </item>
                 </channel>
@@ -45,7 +46,9 @@ class TestZennCrawler:
                 assert "title" in article
                 assert "url" in article
                 assert "published_at" in article
+                assert "creator" in article
                 assert "description" in article
+                assert article["creator"] == "hoge"
 
     def test_should_handle_feed_fetch_error(self):
         """フィード取得エラーを適切に処理すること"""
