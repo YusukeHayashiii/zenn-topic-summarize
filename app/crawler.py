@@ -18,6 +18,7 @@ class ZennCrawler:
         self.logger.info(operation="crawler_init", message="ZennCrawler initialized")
         self.base_feed_url = Config.ZENN_FEED_BASE_URL
         self.api_base_url = Config.ZENN_API_BASE_URL
+        self.trending_feed_url = Config.ZENN_TRENDING_FEED_URL
         self.timeout = Config.CRAWLER_TIMEOUT
 
 
@@ -122,5 +123,60 @@ class ZennCrawler:
                 context={"error": str(e)},
             )
             return None
+
+    def fetch_trending_articles(self, max_articles: int = None) -> List[Dict]:
+        """
+        Zennトレンドフィードから記事を取得する
+
+        Args:
+            max_articles: 最大取得記事数
+
+        Returns:
+            記事リスト
+        """
+        max_articles = max_articles or 10
+
+        self.logger.info(
+            operation="fetch_trending_articles",
+            message="Fetching trending articles",
+            context={"max_articles": max_articles},
+        )
+
+        try:
+            response = requests.get(self.trending_feed_url, timeout=self.timeout)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, "xml")
+            items = soup.find_all("item")
+
+            articles = []
+
+            for item in items[:max_articles]:  # 指定数だけ取得
+                try:
+                    article = self._parse_feed_item(item)
+                    if article:
+                        articles.append(article)
+                except Exception as e:
+                    self.logger.warning(
+                        operation="parse_trending_item",
+                        message="Failed to parse trending feed item",
+                        context={"error": str(e)},
+                    )
+                    continue
+
+            self.logger.info(
+                operation="fetch_trending_articles",
+                message="Successfully fetched trending articles",
+                context={"articles_count": len(articles)},
+            )
+            return articles
+
+        except Exception as e:
+            self.logger.error(
+                operation="fetch_trending_articles",
+                message="Failed to fetch trending articles",
+                context={"error": str(e)},
+            )
+            return []
 
 
