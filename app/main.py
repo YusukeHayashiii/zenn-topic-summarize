@@ -73,6 +73,58 @@ def search_zenn_articles(
         return f"エラーが発生しました: {str(e)}"
 
 
+@mcp.tool()
+def get_trending_articles(
+    max_articles: Annotated[int, "最大取得記事数 (1-10)"] = 10
+) -> str:
+    """Zennから現在のトレンド記事フィードを取得"""
+    
+    logger.info(
+        operation="get_trending_articles",
+        message=f"Getting trending articles",
+        context={"max_articles": max_articles}
+    )
+    
+    try:
+        # Validate max_articles
+        if max_articles < 1 or max_articles > 10:
+            max_articles = 10
+        
+        # Initialize crawler
+        crawler = ZennCrawler()
+        
+        # Fetch trending articles
+        articles = crawler.fetch_trending_articles(max_articles=max_articles)
+        
+        if not articles:
+            return "現在のトレンド記事が見つかりませんでした。"
+        
+        # Format response with basic article information
+        response_parts = [
+            f"# Zennトレンド記事",
+            f"取得記事数: {len(articles)}件\n"
+        ]
+        
+        for i, article in enumerate(articles, 1):
+            response_parts.append(
+                f"## {i}. {article.get('title', 'タイトルなし')}\n"
+                f"- **作成者**: {article.get('creator', '不明')}\n"
+                f"- **作成日**: {article.get('published_at', '不明')}\n"
+                f"- **概要**: {article.get('description', '概要なし')}\n"
+                f"- **URL**: {article.get('url', 'URLなし')}\n"
+            )
+        
+        return "\n".join(response_parts)
+            
+    except Exception as e:
+        logger.error(
+            operation="get_trending_articles",
+            message="Tool execution failed",
+            context={"error": str(e)}
+        )
+        return f"エラーが発生しました: {str(e)}"
+
+
 if __name__ == "__main__":
     logger.info(
         operation="mcp_server_start",
